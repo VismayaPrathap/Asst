@@ -3,6 +3,7 @@ import { Text, View, Pressable } from 'react-native';
 import { doc, deleteDoc } from 'firebase/firestore';
 import { db } from "../src/config/firebase";
 import { useAuth } from './AuthProvider';
+import { globalStyles } from './Styles';
 
 export default function DeleteUser({ id, navigation }) {
   const { user } = useAuth(); // Get the current user from the AuthProvider
@@ -20,7 +21,7 @@ export default function DeleteUser({ id, navigation }) {
   }
 
   return (
-    <View>
+    <View style={globalStyles.container}>
       <Pressable onPress={deleteUser}>
         <Text>Delete this Patient</Text>
       </Pressable>

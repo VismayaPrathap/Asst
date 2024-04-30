@@ -2,6 +2,7 @@ import React from 'react';
 import { StatusBar, StyleSheet, Pressable, Text, View, SafeAreaView, Button, Platform } from 'react-native';
 import { useAuth } from '../screens/AuthProvider'; // Adjust the path if needed
 import { useNavigation } from '@react-navigation/native';
+import { globalStyles } from './Styles';
 
 const Separator =() => <View style={styles.separator}/>
 
@@ -21,7 +22,7 @@ export default function Home() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={globalStyles.container}>
       <View style={[{ width: "90%", margin: 10, backgroundColor: "red" }]}>
           <Button
             onPress={() => navigation.navigate("Caregiver")}
@@ -29,12 +30,12 @@ export default function Home() {
             color="#FF3D00"
           />
         </View>
-        <View style={[{ width: "90%", margin: 10, backgroundColor: "red" }]}>
+        {/* <View style={[{ width: "90%", margin: 10, backgroundColor: "red" }]}>
           <Button
             title="Patient"
             color="#FF3D00"
           />
-        </View>
+        </View> */}
       <Pressable style={styles.button} onPress={handleLogout}>
         <Text style={styles.buttonText}>Logout</Text>
       </Pressable>
@@ -43,13 +44,6 @@ export default function Home() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: Platform.OS === "android"? StatusBar.currentHeight:0 ,
-  },
   button: {
     alignItems: 'center',
     justifyContent: 'center',

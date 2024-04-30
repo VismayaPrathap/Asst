@@ -2,6 +2,7 @@ import React, { useContext, useState } from 'react';
 import { StyleSheet, Text, TextInput, Pressable, View } from 'react-native';
 import { db } from '../src/config/firebase';
 import { useAuth } from './AuthProvider';
+import { globalStyles } from './Styles';
 
 export default function AddPatient({ navigation }) {
   const { user } = useAuth();
@@ -26,32 +27,29 @@ em_phone,
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.label}>Name:</Text>
+    <View style={globalStyles.container}>
+      <Text style={styles.label}>Enter the details of the patient:</Text>
       <TextInput
         style={styles.input}
-        placeholder="Enter patient name"
+        placeholder="Enter Patient Name"
         value={name}
         onChangeText={(text) => setName(text)}
       />
-      <Text style={styles.label}>Age:</Text>
       <TextInput
         style={styles.input}
-        placeholder="Enter patient age"
+        placeholder="Enter Patient Age"
         value={age}
         onChangeText={(text) => setAge(text)}
       />
-      <Text style={styles.label}>Emergency Contact Name:</Text>
       <TextInput
         style={styles.input}
-        placeholder="Enter emergency contact name"
+        placeholder="Enter Emergency Contact Name"
         value={em_name}
         onChangeText={(text) => setEmName(text)}
       />
-      <Text style={styles.label}>Emergency Contact Phone:</Text>
       <TextInput
         style={styles.input}
-        placeholder="Enter emergency contact phone"
+        placeholder="Enter Emergency Contact Phone"
         value={em_phone}
         onChangeText={(text) => setEmPhone(text)}
       />

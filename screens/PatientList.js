@@ -6,6 +6,7 @@ import DeleteUser from './DeleteUser';
 import PatientStatus from './PatientStatus';
 import { useAuth } from './AuthProvider'
 import { fb_auth } from '../src/config/firebase';
+import { globalStyles } from './Styles';
 
 export default function PatientList({ navigation }) {
   const [people, setPeople] = useState([]);
@@ -50,27 +51,26 @@ export default function PatientList({ navigation }) {
   };
 
   const renderItem = ({ item }) => (
-    <View style={{ marginTop: 10 }}>
+    <View style={globalStyles.listItem}>
       <TouchableOpacity
         onPress={() => handleItemClick(item)}
         style={styles.button}
       >
-        <Text style={styles.buttonText}>{item.name}</Text>
+      <Text style={globalStyles.listItemText}>{item.name}</Text>
       </TouchableOpacity>
       <DeleteUser id={item.id} navigation={navigation} />
     </View>
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={globalStyles.container}>
       <View>
         <Text style={styles.text}>Patient List:</Text>
-      </View> 
-
-      <View style={[{ width: "30%", margin: 10, backgroundColor: "red" }]}>
+      </View>
+      <View style={[{ width: "90%", margin: 10, backgroundColor: "red" }]}>
         <Button
           onPress={() => navigation.navigate("Details")}
-          title="+"
+          title="Add a Patient"
           color="#FF3D00"
         />
       </View>

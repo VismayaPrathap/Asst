@@ -1,11 +1,12 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { globalStyles } from './Styles'
 
 const PatientStatus = ({ route }) => {
   const { user } = route.params;
 
   return (
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+    <View style={globalStyles.container}>
       <Text style={styles.text}>User Details:</Text>
       <Text style={styles.text}>Name: {user.name}</Text>
       <Text style={styles.text}>Age: {user.age}</Text>

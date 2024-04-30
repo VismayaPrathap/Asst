@@ -746,3 +746,562 @@ export default function deleteUser({id}){
     </View>
 )}
 
+
+
+
+
+
+
+
+
+
+FINAL ONES:
+firebase.js:
+import firebase from 'firebase/compat/app';
+import 'firebase/compat/auth';
+import 'firebase/compat/firestore';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDTLQKR-_vlCtqvJNRnGOLLFSzQK_gx2IY",
+  authDomain: "patients-2e22e.firebaseapp.com",
+  projectId: "patients-2e22e",
+  storageBucket: "patients-2e22e.appspot.com",
+  messagingSenderId: "824610679817",
+  appId: "1:824610679817:web:caf4b04992785914c49cd8"
+};
+
+// Initialize Firebase
+const app = firebase.initializeApp(firebaseConfig);
+export const db = firebase.firestore();
+export const fb_auth = firebase.auth();
+
+export default app;
+App.js:
+import React from 'react';
+import { NavigationContainer } from "@react-navigation/native";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import Home from "./screens/Home";
+import AddPatient from "./screens/AddPatient";
+import PatientList from "./screens/PatientList";
+import PatientStatus from './screens/PatientStatus';
+import Login from './screens/Login';
+import { AuthProvider } from './screens/AuthProvider';
+
+const Stack = createNativeStackNavigator()
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <NavigationContainer>
+        <Stack.Navigator initialRouteName="Login">
+          <Stack.Screen name="Home" component={Home} />
+          <Stack.Screen name="Caregiver" component={PatientList} />
+          <Stack.Screen name="Details" component={AddPatient} />
+          <Stack.Screen name="Status" component={PatientStatus} />
+          <Stack.Screen name="Login" component={Login} options={{headerShown: false}}/>
+        </Stack.Navigator>
+      </NavigationContainer>
+    </AuthProvider>
+  );
+}
+
+Login.js:
+import React, { useContext, useState } from 'react';
+import { View, TextInput, Button, StyleSheet, ActivityIndicator } from 'react-native';
+import { AuthContext } from './AuthProvider';
+import { fb_auth } from '../src/config/firebase';
+import { useNavigation } from '@react-navigation/native';
+import { useAuth } from './AuthProvider';
+
+const Login = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const navigation = useNavigation();
+  const { signIn, signUp } = useAuth();
+
+  const signUpWithEmail = async () => {
+    setLoading(true);
+    try {
+      await signUp(email, password);
+      alert('Account created successfully. Please log in.');
+    } catch (error) {
+      console.log(error);
+      alert('Error creating account: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const signInWithEmail = async () => {
+    setLoading(true);
+    try {
+      await signIn(email, password);
+      navigation.navigate("Home");
+    } catch (error) {
+      console.log(error);
+      alert('Error signing in: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <View style={styles.container}>
+      <TextInput
+        placeholder="Email"
+        value={email}
+        autoCapitalize='none'
+        onChangeText={(text)=>setEmail(text)}
+        style={styles.input} 
+      />
+      <TextInput
+        placeholder="Password"
+        value={password}
+        autoCapitalize='none'
+        onChangeText={(text)=>setPassword(text)}
+        secureTextEntry={true}
+        style={styles.input}
+      />
+      {loading ? (<ActivityIndicator size="large" color="#0000ff"/>
+      ): (<>
+      <Button title="Login" onPress={signInWithEmail} />
+      <Button title="Create Account" onPress={signUpWithEmail} />
+      </>
+      )}
+    </View>
+  );
+};
+
+export default Login;
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    marginHorizontal: 20,
+  },
+  input: {
+    backgroundColor: '#fff',
+    marginVertical: 4,
+    height: 50,
+    borderWidth: 1,
+    borderRadius: 4,
+    padding: 10,
+  },
+});
+
+AuthProvider.js:
+import React, { createContext, useContext, useState } from 'react';
+import { fb_auth } from '../src/config/firebase';
+import { db } from "../src/config/firebase";
+
+const AuthContext = createContext();
+const auth=fb_auth;
+export const AuthProvider = ({ children }) => {
+  const [user, setUser] = useState(null);
+
+  const signIn = async (email, password) => {
+    try {
+      const userCredential = await fb_auth.signInWithEmailAndPassword(email, password);
+      const user = userCredential.user;
+      
+      setUser(user);
+      return user;
+    } catch (error) {
+      console.log(error);
+      throw new Error(error.message);
+    }
+  };
+
+  const signOut = async () => {
+    try {
+      await fb_auth.signOut();
+      setUser(null);
+    } catch (error) {
+      console.log(error);
+      throw new Error(error.message);
+    }
+  };
+
+  const createUserCollection = async (uid) => {
+    try {
+      await db.collection('users').doc(uid).set({}); // Create an empty document for the user
+      console.log('User collection created');
+    } catch (error) {
+      console.error('Error creating user collection:', error);
+    }
+  };
+
+  const signUp = async (email, password) => {
+    try {
+      const { user: userCredential } = await fb_auth.createUserWithEmailAndPassword(email, password);
+      if (userCredential) {
+        await createUserCollection(userCredential.uid); // Create user-specific collection
+      }
+    } catch (error) {
+      console.error('Error signing up:', error);
+    }
+  };
+
+  const value = {
+    user,
+    signIn,
+    signUp,
+    signOut,
+
+  };
+
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
+export const useAuth = () => useContext(AuthContext);
+
+
+Home.js:
+import React from 'react';
+import { StatusBar, StyleSheet, Pressable, Text, View, SafeAreaView, Button, Platform } from 'react-native';
+import { useAuth } from '../screens/AuthProvider'; // Adjust the path if needed
+import { useNavigation } from '@react-navigation/native';
+
+const Separator =() => <View style={styles.separator}/>
+
+export default function Home() {
+  const { signOut } = useAuth(); // Use the hook here
+  const navigation = useNavigation();
+  const { user } = useAuth();
+
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      navigation.navigate("Login");
+    } catch (error) {
+      console.log(error);
+      alert("Logout Failed: " + error.message);
+    }
+  };
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <View style={[{ width: "90%", margin: 10, backgroundColor: "red" }]}>
+          <Button
+            onPress={() => navigation.navigate("Caregiver")}
+            title="Caregiver"
+            color="#FF3D00"
+          />
+        </View>
+        <View style={[{ width: "90%", margin: 10, backgroundColor: "red" }]}>
+          <Button
+            title="Patient"
+            color="#FF3D00"
+          />
+        </View>
+      <Pressable style={styles.button} onPress={handleLogout}>
+        <Text style={styles.buttonText}>Logout</Text>
+      </Pressable>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: Platform.OS === "android"? StatusBar.currentHeight:0 ,
+  },
+  button: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 32,
+    borderRadius: 4,
+    elevation: 3,
+    backgroundColor: 'black',
+    marginTop: 20,
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  separator: {
+    marginVertical: 8,
+    borderBottomColor: '#737373',
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+});
+
+PatientList.js:
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, Button, Text, TouchableOpacity, FlatList ,View, SafeAreaView } from 'react-native';
+import { collection, onSnapshot } from 'firebase/firestore';
+import { db } from '../src/config/firebase';
+import DeleteUser from './DeleteUser';
+import PatientStatus from './PatientStatus';
+import { useAuth } from './AuthProvider'
+import { fb_auth } from '../src/config/firebase';
+
+export default function PatientList({ navigation }) {
+  const [people, setPeople] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const { user } = useAuth(); // Get the current user from the AuthProvider
+
+  useEffect(() => {
+    if (user) { // Check if user is logged in
+      setLoading(true);
+      const patientsQuery = db.collection('users').doc(user.uid).collection('patients').get(); // Get the patients collection for the current user
+      patientsQuery.then((querySnapshot) => {
+        const patientsList = [];
+        querySnapshot.forEach((doc) => {
+          patientsList.push({ ...doc.data(), id: doc.id });
+        });
+        setPeople(patientsList);
+        setLoading(false);
+      }).catch((error) => {
+        console.log('Error getting patients: ', error);
+        setLoading(false);
+      });
+
+      const unsubscribe = onSnapshot(db.collection('users').doc(user.uid).collection('patients'), (querySnapshot) => {
+        const patientsList = [];
+        querySnapshot.forEach((doc) => {
+          patientsList.push({ ...doc.data(), id: doc.id });
+        });
+        setPeople(patientsList);
+      });
+
+      // Clean up the listener when the component unmounts
+      return () => unsubscribe();
+      
+    } else {
+      setPeople([]);
+      setLoading(false);
+    }
+  }, [user]); // Add user as a dependency so that the effect runs again when user changes
+
+  const handleItemClick = (item) => {
+    navigation.navigate("Status", { user: item });
+  };
+
+  const renderItem = ({ item }) => (
+    <View style={{ marginTop: 10 }}>
+      <TouchableOpacity
+        onPress={() => handleItemClick(item)}
+        style={styles.button}
+      >
+        <Text style={styles.buttonText}>{item.name}</Text>
+      </TouchableOpacity>
+      <DeleteUser id={item.id} navigation={navigation} />
+    </View>
+  );
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <View>
+        <Text style={styles.text}>Patient List:</Text>
+      </View> 
+
+      <View style={[{ width: "30%", margin: 10, backgroundColor: "red" }]}>
+        <Button
+          onPress={() => navigation.navigate("Details")}
+          title="+"
+          color="#FF3D00"
+        />
+      </View>
+      <FlatList
+        data={people}
+        renderItem={renderItem}
+        keyExtractor={(item) => item.id}
+      />
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+    alignItems: 'center',
+  },
+  text: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 16,
+    marginTop: 16,
+  },
+  button: {
+    backgroundColor: 'lightblue', 
+    padding: 10, 
+    borderRadius: 5, 
+  },
+  buttonText: {
+    fontSize: 16, 
+    fontWeight: 'bold', 
+    color: 'black',
+  },
+});
+
+
+AddPatient.js:
+import React, { useContext, useState } from 'react';
+import { StyleSheet, Text, TextInput, Pressable, View } from 'react-native';
+import { db } from '../src/config/firebase';
+import { useAuth } from './AuthProvider';
+
+export default function AddPatient({ navigation }) {
+  const { user } = useAuth();
+  const [name, setName] = useState('');
+  const [age, setAge] = useState('');
+  const [em_name, setEmName] = useState('');
+  const [em_phone, setEmPhone] = useState('');
+
+  const handleAddPatient = async () => {
+    try {
+      const patientRef = await db.collection('users').doc(user.uid).collection('patients').add({
+        name,
+        age,
+        em_name,
+em_phone,
+      });
+      navigation.goBack();
+    } catch (error) {
+      console.log(error);
+      alert('Error adding patient: ' + error.message);
+    }
+  };
+
+  return (
+    <View style={styles.container}>
+      <Text style={styles.label}>Name:</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="Enter patient name"
+        value={name}
+        onChangeText={(text) => setName(text)}
+      />
+      <Text style={styles.label}>Age:</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="Enter patient age"
+        value={age}
+        onChangeText={(text) => setAge(text)}
+      />
+      <Text style={styles.label}>Emergency Contact Name:</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="Enter emergency contact name"
+        value={em_name}
+        onChangeText={(text) => setEmName(text)}
+      />
+      <Text style={styles.label}>Emergency Contact Phone:</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="Enter emergency contact phone"
+        value={em_phone}
+        onChangeText={(text) => setEmPhone(text)}
+      />
+      <Pressable style={styles.button} onPress={handleAddPatient}>
+        <Text style={styles.buttonText}>Add Patient</Text>
+      </Pressable>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  label: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  input: {
+    height: 40,
+    width: 300,
+    borderWidth: 1,
+    borderRadius: 4,
+    padding: 5,
+    marginBottom: 16,
+  },
+  button: {
+    backgroundColor: 'lightblue',
+    padding: 10,
+    borderRadius: 4,
+    width: 100,
+    alignItems: 'center',
+  },
+  buttonText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+});
+
+PatientStatus.js:
+import React from 'react';
+import { View, Text, StyleSheet } from 'react-native';
+
+const PatientStatus = ({ route }) => {
+  const { user } = route.params;
+
+  return (
+    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <Text style={styles.text}>User Details:</Text>
+      <Text style={styles.text}>Name: {user.name}</Text>
+      <Text style={styles.text}>Age: {user.age}</Text>
+      <Text style={styles.text}>Emergency Contact Name: {user.em_name}</Text>
+      <Text style={styles.text}>Emergency Contact Phone: {user.em_phone}</Text>
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  text: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+});
+
+export default PatientStatus;
+
+DeleteUser.js:
+import React from 'react';
+import { Text, View, Pressable } from 'react-native';
+import { doc, deleteDoc } from 'firebase/firestore';
+import { db } from "../src/config/firebase";
+import { useAuth } from './AuthProvider';
+
+export default function DeleteUser({ id, navigation }) {
+  const { user } = useAuth(); // Get the current user from the AuthProvider
+  const patientDb = doc(db, `users/${user.uid}/patients`, id); // Get the specific patient document
+
+  function deleteUser() {
+    deleteDoc(patientDb)
+      .then(() => {
+        console.log('User deleted successfully');
+        
+      })
+      .catch((error) => {
+        console.log('Error deleting user: ', error);
+      });
+  }
+
+  return (
+    <View>
+      <Pressable onPress={deleteUser}>
+        <Text>Delete this Patient</Text>
+      </Pressable>
+    </View>
+  );
+}
+

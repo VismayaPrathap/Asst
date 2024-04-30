@@ -4,7 +4,7 @@ import { AuthContext } from './AuthProvider';
 import { fb_auth } from '../src/config/firebase';
 import { useNavigation } from '@react-navigation/native';
 import { useAuth } from './AuthProvider';
-
+ 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
