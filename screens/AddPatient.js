@@ -10,14 +10,30 @@ export default function AddPatient({ navigation }) {
   const [age, setAge] = useState('');
   const [em_name, setEmName] = useState('');
   const [em_phone, setEmPhone] = useState('');
+  const [error, setError] = useState('');
 
   const handleAddPatient = async () => {
+    if (!name || !age || !em_name || !em_phone) {
+      setError('Please fill in all the fields before adding a patient.');
+      return;
+    }
+
+    if (isNaN(age)) {
+      setError('Age must be a number.');
+      return;
+    }
+
+    if (isNaN(em_phone)) {
+      setError('Emergency contact phone number must be a number.');
+      return;
+    }
+
     try {
       await db.ref(`users/${user.uid}/patients`).push({
         name,
-        age,
+        age: parseInt(age),
         em_name,
-        em_phone,
+        em_phone: parseInt(em_phone),
       });
       navigation.goBack();
     } catch (error) {
@@ -40,6 +56,7 @@ export default function AddPatient({ navigation }) {
         placeholder="Enter Patient Age"
         value={age}
         onChangeText={(text) => setAge(text)}
+        keyboardType="numeric"
       />
       <TextInput
         style={styles.input}
@@ -52,9 +69,11 @@ export default function AddPatient({ navigation }) {
         placeholder="Enter Emergency Contact Phone"
         value={em_phone}
         onChangeText={(text) => setEmPhone(text)}
+        keyboardType="numeric"
       />
-      <Pressable style={styles.button} onPress={handleAddPatient}>
-        <Text style={styles.buttonText}>Add Patient</Text>
+      {error && <Text style={styles.error}>{error}</Text>}
+      <Pressable style={globalStyles.button} onPress={handleAddPatient}>
+        <Text style={globalStyles.listItemText}>Add Patient</Text>
       </Pressable>
     </View>
   );
@@ -68,27 +87,36 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   label: {
-    fontSize: 16,
+    fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 8,
   },
   input: {
-    height: 40,
-    width: 300,
+    height: 50,
+    width: 350,
     borderWidth: 1,
     borderRadius: 4,
-    padding: 5,
-    marginBottom: 16,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 10,
+    marginTop: 10,
+    marginBottom: 20
   },
   button: {
-    backgroundColor: 'lightblue',
+    backgroundColor: '#72bcd4',
     padding: 10,
     borderRadius: 4,
     width: 100,
     alignItems: 'center',
+    margin: 30,
   },
   buttonText: {
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  error: {
+    color: 'red',
+    marginBottom: 10,
   },
 });

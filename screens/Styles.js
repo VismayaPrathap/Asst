@@ -17,7 +17,7 @@ export const globalStyles = StyleSheet.create({
     marginBottom: 16,
   },
   button: {
-    backgroundColor: 'lightblue',
+    backgroundColor: '#72bcd4',
     padding: 10,
     borderRadius: 4,
     width: '80%',
@@ -40,5 +40,6 @@ export const globalStyles = StyleSheet.create({
   },
   listItemText: {
     fontSize: 16,
+    color: "white",
   },
 });

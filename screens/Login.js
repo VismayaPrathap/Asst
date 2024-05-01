@@ -1,5 +1,5 @@
 import { useAuth } from './AuthProvider';
-import React, { useState } from 'react';
+import React, { useState} from 'react';
 import { View, TextInput, Button, StyleSheet, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 
@@ -9,6 +9,7 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const navigation = useNavigation();
   const { signIn, createUser } = useAuth();
+
   const signUpWithEmail = async () => {
     setLoading(true);
     try {
@@ -38,14 +39,14 @@ const Login = () => {
   return (
     <View style={styles.container}>
       <TextInput
-        placeholder="Email"
+        placeholder="Enter your Email"
         value={email}
         autoCapitalize='none'
         onChangeText={(text)=>setEmail(text)}
         style={styles.input} 
       />
       <TextInput
-        placeholder="Password"
+        placeholder="Enter your Password"
         value={password}
         autoCapitalize='none'
         onChangeText={(text)=>setPassword(text)}
@@ -54,9 +55,9 @@ const Login = () => {
       />
       {loading ? (<ActivityIndicator size="large" color="#0000ff"/>
       ): (<>
-      <Button title="Login" onPress={signInWithEmail} />
+      <Button title="Login" onPress={signInWithEmail} color="#72bcd4"/>
       <Separator/>
-      <Button title="Create Account" onPress={signUpWithEmail} />
+      <Button title="Create Account" onPress={signUpWithEmail} color="#72bcd4"/>
       </>
       )}
     </View>
@@ -77,6 +78,7 @@ const styles = StyleSheet.create({
     height: 50,
     borderWidth: 1,
     borderRadius: 4,
+    borderColor: 'lightblue',
     padding: 10,
   },
   separator: {

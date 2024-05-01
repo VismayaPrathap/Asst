@@ -6,21 +6,29 @@ import AddPatient from "./screens/AddPatient";
 import PatientList from "./screens/PatientList";
 import PatientStatus from './screens/PatientStatus';
 import Login from './screens/Login';
-import { AuthProvider } from './screens/AuthProvider';
+import { AuthProvider, useAuth } from './screens/AuthProvider';
 
 const Stack = createNativeStackNavigator()
+
+const AppNavigator = () => {
+  const { user } = useAuth();
+
+  return (
+    <Stack.Navigator initialRouteName={user? "Home" : "Login"}>
+      <Stack.Screen name="Home" component={Home} options={{headerShown: false}} />
+      <Stack.Screen name="Patient List" component={PatientList} />
+      <Stack.Screen name="Details" component={AddPatient} />
+      <Stack.Screen name="Patient Details" component={PatientStatus} />
+      <Stack.Screen name="Login" component={Login} options={{headerShown: false}}/>
+    </Stack.Navigator>
+  );
+}
 
 export default function App() {
   return (
     <AuthProvider>
       <NavigationContainer>
-        <Stack.Navigator initialRouteName="Login">
-          <Stack.Screen name="Home" component={Home} />
-          <Stack.Screen name="Caregiver" component={PatientList} />
-          <Stack.Screen name="Details" component={AddPatient} />
-          <Stack.Screen name="Status" component={PatientStatus} />
-          <Stack.Screen name="Login" component={Login} options={{headerShown: false}}/>
-        </Stack.Navigator>
+        <AppNavigator />
       </NavigationContainer>
     </AuthProvider>
   );

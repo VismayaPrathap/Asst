@@ -28,7 +28,7 @@ export default function PatientList({ navigation }) {
   }, [user]); // Add user as a dependency so that the effect runs again when user changes
 
   const handleItemClick = (item) => {
-    navigation.navigate("Status", { user: item });
+    navigation.navigate("Patient Details", { user: item });
   };
 
   const renderItem = ({ item }) => (
@@ -43,23 +43,25 @@ export default function PatientList({ navigation }) {
     </View>
   );
 
+  const Separator =() => <View style={styles.separator}/>
+
   return (
     <SafeAreaView style={globalStyles.container}>
-      <View>
-        <Text style={styles.text}>Patient List:</Text>
-      </View>
+      <Separator/>
       <View style={[{ width: "90%", margin: 10, backgroundColor: "red" }]}>
         <Button
           onPress={() => navigation.navigate("Details")}
           title="Add a Patient"
-          color="#FF3D00"
+          color="#72bcd4"
         />
       </View>
-      <FlatList
+      <View>
+        <FlatList
         data={people}
         renderItem={renderItem}
         keyExtractor={(item) => item.id}
       />
+      </View>
     </SafeAreaView>
   );
 }
@@ -77,7 +79,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   button: {
-    backgroundColor: 'lightblue', 
+    backgroundColor: '#72bcd4', 
     padding: 10, 
     borderRadius: 5, 
   },
@@ -85,5 +87,10 @@ const styles = StyleSheet.create({
     fontSize: 16, 
     fontWeight: 'bold', 
     color: 'black',
+  },
+  separator: {
+    marginVertical: 8,
+    borderBottomColor: '#737373',
+    borderBottomWidth: StyleSheet.hairlineWidth,
   },
 });

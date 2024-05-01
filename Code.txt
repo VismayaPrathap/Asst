@@ -30,21 +30,29 @@ import AddPatient from "./screens/AddPatient";
 import PatientList from "./screens/PatientList";
 import PatientStatus from './screens/PatientStatus';
 import Login from './screens/Login';
-import { AuthProvider } from './screens/AuthProvider';
+import { AuthProvider, useAuth } from './screens/AuthProvider';
 
 const Stack = createNativeStackNavigator()
+
+const AppNavigator = () => {
+  const { user } = useAuth();
+
+  return (
+    <Stack.Navigator initialRouteName={user? "Home" : "Login"}>
+      <Stack.Screen name="Home" component={Home} options={{headerShown: false}} />
+      <Stack.Screen name="Patient List" component={PatientList} />
+      <Stack.Screen name="Details" component={AddPatient} />
+      <Stack.Screen name="Patient Details" component={PatientStatus} />
+      <Stack.Screen name="Login" component={Login} options={{headerShown: false}}/>
+    </Stack.Navigator>
+  );
+}
 
 export default function App() {
   return (
     <AuthProvider>
       <NavigationContainer>
-        <Stack.Navigator initialRouteName="Login">
-          <Stack.Screen name="Home" component={Home} />
-          <Stack.Screen name="Caregiver" component={PatientList} />
-          <Stack.Screen name="Details" component={AddPatient} />
-          <Stack.Screen name="Status" component={PatientStatus} />
-          <Stack.Screen name="Login" component={Login} options={{headerShown: false}}/>
-        </Stack.Navigator>
+        <AppNavigator />
       </NavigationContainer>
     </AuthProvider>
   );
@@ -52,7 +60,7 @@ export default function App() {
 
 Login.js:
 import { useAuth } from './AuthProvider';
-import React, { useState } from 'react';
+import React, { useState} from 'react';
 import { View, TextInput, Button, StyleSheet, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 
@@ -62,6 +70,7 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const navigation = useNavigation();
   const { signIn, createUser } = useAuth();
+
   const signUpWithEmail = async () => {
     setLoading(true);
     try {
@@ -91,14 +100,14 @@ const Login = () => {
   return (
     <View style={styles.container}>
       <TextInput
-        placeholder="Email"
+        placeholder="Enter your Email"
         value={email}
         autoCapitalize='none'
         onChangeText={(text)=>setEmail(text)}
         style={styles.input} 
       />
       <TextInput
-        placeholder="Password"
+        placeholder="Enter your Password"
         value={password}
         autoCapitalize='none'
         onChangeText={(text)=>setPassword(text)}
@@ -107,9 +116,9 @@ const Login = () => {
       />
       {loading ? (<ActivityIndicator size="large" color="#0000ff"/>
       ): (<>
-      <Button title="Login" onPress={signInWithEmail} />
+      <Button title="Login" onPress={signInWithEmail} color="#72bcd4"/>
       <Separator/>
-      <Button title="Create Account" onPress={signUpWithEmail} />
+      <Button title="Create Account" onPress={signUpWithEmail} color="#72bcd4"/>
       </>
       )}
     </View>
@@ -130,6 +139,7 @@ const styles = StyleSheet.create({
     height: 50,
     borderWidth: 1,
     borderRadius: 4,
+    borderColor: 'lightblue',
     padding: 10,
   },
   separator: {
@@ -165,9 +175,9 @@ export default function Home() {
     <SafeAreaView style={globalStyles.container}>
       <View style={[{ width: "90%", margin: 10, backgroundColor: "red" }]}>
           <Button
-            onPress={() => navigation.navigate("Caregiver")}
+            onPress={() => navigation.navigate("Patient List")}
             title="Caregiver"
-            color="#FF3D00"
+            color="#72bcd4"
           />
         </View>
         {/* <View style={[{ width: "90%", margin: 10, backgroundColor: "red" }]}>
@@ -202,7 +212,7 @@ const styles = StyleSheet.create({
 });
 
 AuthProvider.js:
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import { fb_auth } from '../src/config/firebase';
 import { db } from "../src/config/firebase";
 
@@ -292,7 +302,7 @@ export default function PatientList({ navigation }) {
   }, [user]); // Add user as a dependency so that the effect runs again when user changes
 
   const handleItemClick = (item) => {
-    navigation.navigate("Status", { user: item });
+    navigation.navigate("Patient Details", { user: item });
   };
 
   const renderItem = ({ item }) => (
@@ -307,23 +317,25 @@ export default function PatientList({ navigation }) {
     </View>
   );
 
+  const Separator =() => <View style={styles.separator}/>
+
   return (
     <SafeAreaView style={globalStyles.container}>
-      <View>
-        <Text style={styles.text}>Patient List:</Text>
-      </View>
+      <Separator/>
       <View style={[{ width: "90%", margin: 10, backgroundColor: "red" }]}>
         <Button
           onPress={() => navigation.navigate("Details")}
           title="Add a Patient"
-          color="#FF3D00"
+          color="#72bcd4"
         />
       </View>
-      <FlatList
+      <View>
+        <FlatList
         data={people}
         renderItem={renderItem}
         keyExtractor={(item) => item.id}
       />
+      </View>
     </SafeAreaView>
   );
 }
@@ -341,7 +353,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   button: {
-    backgroundColor: 'lightblue', 
+    backgroundColor: '#72bcd4', 
     padding: 10, 
     borderRadius: 5, 
   },
@@ -349,6 +361,11 @@ const styles = StyleSheet.create({
     fontSize: 16, 
     fontWeight: 'bold', 
     color: 'black',
+  },
+  separator: {
+    marginVertical: 8,
+    borderBottomColor: '#737373',
+    borderBottomWidth: StyleSheet.hairlineWidth,
   },
 });
 
@@ -365,14 +382,30 @@ export default function AddPatient({ navigation }) {
   const [age, setAge] = useState('');
   const [em_name, setEmName] = useState('');
   const [em_phone, setEmPhone] = useState('');
+  const [error, setError] = useState('');
 
   const handleAddPatient = async () => {
+    if (!name || !age || !em_name || !em_phone) {
+      setError('Please fill in all the fields before adding a patient.');
+      return;
+    }
+
+    if (isNaN(age)) {
+      setError('Age must be a number.');
+      return;
+    }
+
+    if (isNaN(em_phone)) {
+      setError('Emergency contact phone number must be a number.');
+      return;
+    }
+
     try {
       await db.ref(`users/${user.uid}/patients`).push({
         name,
-        age,
+        age: parseInt(age),
         em_name,
-        em_phone,
+        em_phone: parseInt(em_phone),
       });
       navigation.goBack();
     } catch (error) {
@@ -395,6 +428,7 @@ export default function AddPatient({ navigation }) {
         placeholder="Enter Patient Age"
         value={age}
         onChangeText={(text) => setAge(text)}
+        keyboardType="numeric"
       />
       <TextInput
         style={styles.input}
@@ -407,9 +441,11 @@ export default function AddPatient({ navigation }) {
         placeholder="Enter Emergency Contact Phone"
         value={em_phone}
         onChangeText={(text) => setEmPhone(text)}
+        keyboardType="numeric"
       />
-      <Pressable style={styles.button} onPress={handleAddPatient}>
-        <Text style={styles.buttonText}>Add Patient</Text>
+      {error && <Text style={styles.error}>{error}</Text>}
+      <Pressable style={globalStyles.button} onPress={handleAddPatient}>
+        <Text style={globalStyles.listItemText}>Add Patient</Text>
       </Pressable>
     </View>
   );
@@ -423,28 +459,37 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   label: {
-    fontSize: 16,
+    fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 8,
   },
   input: {
-    height: 40,
-    width: 300,
+    height: 50,
+    width: 350,
     borderWidth: 1,
     borderRadius: 4,
-    padding: 5,
-    marginBottom: 16,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 10,
+    marginTop: 10,
+    marginBottom: 20
   },
   button: {
-    backgroundColor: 'lightblue',
+    backgroundColor: '#72bcd4',
     padding: 10,
     borderRadius: 4,
     width: 100,
     alignItems: 'center',
+    margin: 30,
   },
   buttonText: {
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  error: {
+    color: 'red',
+    marginBottom: 10,
   },
 });
 
@@ -481,8 +526,7 @@ export default function DeleteUser({ id, navigation }) {
 
 PatientStatus.js:
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { globalStyles } from './Styles'
+import { View, Text, StyleSheet, Alert } from 'react-native';
 import { ref, onValue } from 'firebase/database'
 import { db } from "../src/config/firebase";
 
@@ -497,31 +541,72 @@ const PatientStatus = ({ route }) => {
       setData(userDataVal);
     })
   }, []);
-  
+
+  useEffect(() => {
+    if (data.int === 1) {
+      Alert.alert('Fall Detected!');
+    }
+  }, [data.int]);
+
   return (
-    <View style={globalStyles.container}>
-      <Text style={styles.text}>User Details:</Text>
-      <Text style={styles.text}>Name: {user.name}</Text>
-      <Text style={styles.text}>Age: {user.age}</Text>
-      <Text style={styles.text}>Emergency Contact Name: {user.em_name}</Text>
-      <Text style={styles.text}>Emergency Contact Phone: {user.em_phone}</Text>
-      {
-        data && (
-          <View>
-            <Text style={styles.text}>Pulse: {data.pulse}</Text>
-            <Text style={styles.text}>Int: {data.int}</Text>
-          </View>
-        )
-      }
+    <View style={styles.container}>
+      <Text style={styles.text}>Name:</Text>
+      <View style={styles.detailsContainer}>
+        <View style={styles.detailBox}>
+          <Text style={styles.text}>{user.name}</Text>
+        </View>
+        <Text style={styles.text}>Age:</Text>
+        <View style={styles.detailBox}>
+          <Text style={styles.text}>{user.age}</Text>
+        </View>
+        <Text style={styles.text}>Emergency Contact Name:</Text>
+        <View style={styles.detailBox}>
+          <Text style={styles.text}>{user.em_name}</Text>
+        </View>
+        <Text style={styles.text}>Emergency Contact Phone:</Text>
+        <View style={styles.detailBox}>
+          <Text style={styles.text}>{user.em_phone}</Text>
+        </View>
+        {
+          data && (
+            <View>
+              <Text style={styles.text}>Pulse:</Text>
+              <View style={styles.detailBox}>
+                <Text style={styles.text}>{data.pulse}</Text>
+              </View>
+              <Text style={styles.text}>Fall Detection:</Text>
+              <View style={styles.detailBox}>
+                <Text style={styles.text}>{data.int}</Text>
+              </View>
+            </View>
+          )
+        }
+      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    marginHorizontal: 20,
+  },
+  detailsContainer: {
+    marginBottom: 20,
+  },
+  detailBox: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: "lightblue",
+    padding: 10,
+    marginBottom: 30,
+    marginTop: 10,
+  },
   text: {
     fontSize: 16,
     fontWeight: 'bold',
-    marginBottom: 10,
   },
 });
 

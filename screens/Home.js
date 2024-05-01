@@ -23,9 +23,9 @@ export default function Home() {
     <SafeAreaView style={globalStyles.container}>
       <View style={[{ width: "90%", margin: 10, backgroundColor: "red" }]}>
           <Button
-            onPress={() => navigation.navigate("Caregiver")}
+            onPress={() => navigation.navigate("Patient List")}
             title="Caregiver"
-            color="#FF3D00"
+            color="#72bcd4"
           />
         </View>
         {/* <View style={[{ width: "90%", margin: 10, backgroundColor: "red" }]}>
