@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, Text, TextInput, Pressable, View } from 'react-native';
 import { db } from '../src/config/firebase';
 import { useAuth } from './AuthProvider';
@@ -13,11 +13,11 @@ export default function AddPatient({ navigation }) {
 
   const handleAddPatient = async () => {
     try {
-      const patientRef = await db.collection('users').doc(user.uid).collection('patients').add({
+      await db.ref(`users/${user.uid}/patients`).push({
         name,
         age,
         em_name,
-em_phone,
+        em_phone,
       });
       navigation.goBack();
     } catch (error) {

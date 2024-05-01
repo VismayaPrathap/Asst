@@ -1,13 +1,11 @@
 import React from 'react';
-import { StatusBar, StyleSheet, Pressable, Text, View, SafeAreaView, Button, Platform } from 'react-native';
-import { useAuth } from '../screens/AuthProvider'; // Adjust the path if needed
+import { StyleSheet, Pressable, Text, View, SafeAreaView, Button, Platform } from 'react-native';
+import { useAuth } from '../screens/AuthProvider';
 import { useNavigation } from '@react-navigation/native';
 import { globalStyles } from './Styles';
 
-const Separator =() => <View style={styles.separator}/>
-
 export default function Home() {
-  const { signOut } = useAuth(); // Use the hook here
+  const { signOut } = useAuth();
   const navigation = useNavigation();
   const { user } = useAuth();
 
@@ -58,10 +56,5 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: 'bold',
-  },
-  separator: {
-    marginVertical: 8,
-    borderBottomColor: '#737373',
-    borderBottomWidth: StyleSheet.hairlineWidth,
   },
 });

@@ -1,19 +1,21 @@
 import firebase from 'firebase/compat/app';
 import 'firebase/compat/auth';
-import 'firebase/compat/firestore';
+import 'firebase/compat/database';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDTLQKR-_vlCtqvJNRnGOLLFSzQK_gx2IY",
-  authDomain: "patients-2e22e.firebaseapp.com",
-  projectId: "patients-2e22e",
-  storageBucket: "patients-2e22e.appspot.com",
-  messagingSenderId: "824610679817",
-  appId: "1:824610679817:web:caf4b04992785914c49cd8"
+  apiKey: "AIzaSyAr6ekKTuYjr7pDXO5RO1fJ2MFPt12WMCA",
+  authDomain: "asst-987dd.firebaseapp.com",
+  databaseURL: "https://asst-987dd-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "asst-987dd",
+  storageBucket: "asst-987dd.appspot.com",
+  messagingSenderId: "629126385889",
+  appId: "1:629126385889:web:e74b9e87b89a65025627a0",
+  measurementId: "G-MPJX7D692C"
 };
 
 // Initialize Firebase
 const app = firebase.initializeApp(firebaseConfig);
-export const db = firebase.firestore();
+export const db = firebase.database();
 export const fb_auth = firebase.auth();
 
 export default app;

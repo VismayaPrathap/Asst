@@ -1,22 +1,20 @@
 import React from 'react';
-import { Text, View, Pressable } from 'react-native';
-import { doc, deleteDoc } from 'firebase/firestore';
 import { db } from "../src/config/firebase";
 import { useAuth } from './AuthProvider';
-import { globalStyles } from './Styles';
+import { Text, View, Pressable } from 'react-native';
+import { globalStyles } from './Styles'
 
 export default function DeleteUser({ id, navigation }) {
-  const { user } = useAuth(); // Get the current user from the AuthProvider
-  const patientDb = doc(db, `users/${user.uid}/patients`, id); // Get the specific patient document
+  const { user } = useAuth();
+  const patientRef = db.ref(`users/${user.uid}/patients/${id}`);
 
   function deleteUser() {
-    deleteDoc(patientDb)
-      .then(() => {
+    patientRef.remove()
+     .then(() => {
         console.log('User deleted successfully');
-        
       })
-      .catch((error) => {
-        console.log('Error deleting user: ', error);
+     .catch((error) => {
+       console.log('Error deleting user: ', error);
       });
   }
 

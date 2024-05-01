@@ -1,45 +1,26 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Button, Text, TouchableOpacity, FlatList ,View, SafeAreaView } from 'react-native';
-import { collection, onSnapshot } from 'firebase/firestore';
 import { db } from '../src/config/firebase';
+import { StyleSheet, Button, Text, TouchableOpacity, FlatList ,View, SafeAreaView } from 'react-native';
+import { useAuth } from './AuthProvider';
 import DeleteUser from './DeleteUser';
-import PatientStatus from './PatientStatus';
-import { useAuth } from './AuthProvider'
-import { fb_auth } from '../src/config/firebase';
 import { globalStyles } from './Styles';
 
 export default function PatientList({ navigation }) {
   const [people, setPeople] = useState([]);
   const [loading, setLoading] = useState(false);
-  const { user } = useAuth(); // Get the current user from the AuthProvider
+  const { user } = useAuth();
 
   useEffect(() => {
-    if (user) { // Check if user is logged in
+    if (user) {
       setLoading(true);
-      const patientsQuery = db.collection('users').doc(user.uid).collection('patients').get(); // Get the patients collection for the current user
-      patientsQuery.then((querySnapshot) => {
+      db.ref(`users/${user.uid}/patients`).on('value', (snapshot) => {
         const patientsList = [];
-        querySnapshot.forEach((doc) => {
-          patientsList.push({ ...doc.data(), id: doc.id });
+        snapshot.forEach((childSnapshot) => {
+          patientsList.push({...childSnapshot.val(), id: childSnapshot.key });
         });
         setPeople(patientsList);
         setLoading(false);
-      }).catch((error) => {
-        console.log('Error getting patients: ', error);
-        setLoading(false);
       });
-
-      const unsubscribe = onSnapshot(db.collection('users').doc(user.uid).collection('patients'), (querySnapshot) => {
-        const patientsList = [];
-        querySnapshot.forEach((doc) => {
-          patientsList.push({ ...doc.data(), id: doc.id });
-        });
-        setPeople(patientsList);
-      });
-
-      // Clean up the listener when the component unmounts
-      return () => unsubscribe();
-      
     } else {
       setPeople([]);
       setLoading(false);
